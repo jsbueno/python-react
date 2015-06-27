@@ -9,11 +9,16 @@ class Rule(object):
 
 
 class Reactor(object):
+    _running = 0
     def __init__(self):
-        self.rules = defaultdict(list)
+        self._rules = defaultdict(list)
+        self._max_recursion = 1
+        self._recursing = defaultdict(lambda: 0)
+        self._running = True
+        
     def _rule_setter(self, rule):
         for attrname in rule.attrs:
-            self.rules[attrname].append(rule)
+            self._rules[attrname].append(rule)
 
     def __setattr__(self, attrname, value):
         if isinstance(value, Rule):
@@ -21,9 +26,15 @@ class Reactor(object):
             self._rule_setter(value)
             self._exec_rule(value)
             return
+        if not self._running:
+            return super(Reactor, self).__setattr__(attrname, value)
+        if self._recursing[value] >= self._max_recursion:
+            return
+        self._recursing[value] += 1
         super(Reactor, self).__setattr__(attrname, value)
-        for rule in self.rules[attrname]:
+        for rule in self._rules[attrname]:
             self._exec_rule(rule)
+        self._recursing[value] -= 1
 
     def _exec_rule(self, rule):
         try:
@@ -52,4 +63,15 @@ __doc__= """
 >>> 
 >>> R.d
 8
+>>> R.e = Rule(lambda f: f / 2.)
+>>> R.f = Rule(lambda e: e * 2)
+Traceback (most recent call last):
+    ...
+TypeError: unsupported operand type(s) for *: 'NoneType' and 'int'
+>>> R.e = 6
+>>> R.f
+12
+>>> R.f = 20
+>>> R.e
+10.0
 """
