@@ -21,6 +21,8 @@ class Reactor(object):
             self._rules[attrname].append(rule)
 
     def __setattr__(self, attrname, value):
+        if callable(value):
+            value = Rule(value)
         if isinstance(value, Rule):
             value.name = attrname
             self._rule_setter(value)
@@ -48,7 +50,7 @@ R = Reactor()
 
 __doc__= """
 >>> from react import R, Rule
->>> R.c = Rule(lambda a, b: a + b)
+>>> R.c = lambda a, b: a + b
 >>> R.c
 >>> R.a = 10
 >>> R.b = 5
@@ -63,8 +65,8 @@ __doc__= """
 >>> 
 >>> R.d
 8
->>> R.e = Rule(lambda f: f / 2.)
->>> R.f = Rule(lambda e: e * 2)
+>>> R.e = lambda f: f / 2.
+>>> R.f = lambda e: e * 2
 Traceback (most recent call last):
     ...
 TypeError: unsupported operand type(s) for *: 'NoneType' and 'int'
