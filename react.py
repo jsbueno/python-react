@@ -1,8 +1,11 @@
 # coding: utf-8
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 
-
-Rule = namedtuple("Rule", "name attrs action")
+class Rule(object):
+    def __init__(self, action, attrs=(),  predicate=None):
+        self.action = action
+        self.attrs = attrs if attrs else action.__code__.co_varnames[:action.__code__.co_argcount]
+        self.predicate = predicate
 
 
 class Reactor(object):
@@ -14,11 +17,11 @@ class Reactor(object):
 
     def __setattr__(self, attrname, value):
         if isinstance(value, Rule):
+            value.name = attrname
             self._rule_setter(value)
             self._exec_rule(value)
             return
         super(Reactor, self).__setattr__(attrname, value)
-        rules = self.rules
         for rule in self.rules[attrname]:
             self._exec_rule(rule)
 
@@ -34,14 +37,14 @@ R = Reactor()
 
 __doc__= """
 >>> from react import R, Rule
->>> R.c = Rule("c", ("a", "b"), lambda a, b: a + b)
+>>> R.c = Rule(lambda a, b: a + b)
 >>> R.c
 >>> R.a = 10
 >>> R.b = 5
 >>> R.c
 15
 >>> 
->>> R.d = Rule("d", ("c",), lambda c: c * 2)
+>>> R.d = Rule(lambda c: c * 2)
 >>> R.d
 30
 >>> 
