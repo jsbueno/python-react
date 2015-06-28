@@ -33,13 +33,13 @@ class Reactor(object):
             return
         if not self._running:
             return super(Reactor, self).__setattr__(attrname, value)
-        if self._recursing[value] >= self._max_recursion:
+        if self._recursing[attrname] >= self._max_recursion:
             return
-        self._recursing[value] += 1
+        self._recursing[attrname] += 1
         super(Reactor, self).__setattr__(attrname, value)
         for rule in self._rules[attrname]:
             self._exec_rule(rule)
-        self._recursing[value] -= 1
+        self._recursing[attrname] -= 1
 
     def _exec_rule(self, rule):
         try:
