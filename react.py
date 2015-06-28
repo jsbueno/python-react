@@ -4,11 +4,16 @@ __version__ = "0.1"
 
 from collections import defaultdict
 
+def _get_arg_names(func):
+    return func.__code__.co_varnames[:func.__code__.co_argcount]
+
 class Rule(object):
     def __init__(self, action, attrs=(),  predicate=None):
         self.action = action
-        self.attrs = attrs if attrs else action.__code__.co_varnames[:action.__code__.co_argcount]
+        self.attrs = attrs if attrs else _get_arg_names(action)
         self.predicate = predicate
+        if predicate:
+            self.predicate_args = _get_arg_names(predicate)
 
 
 class Reactor(object):
@@ -43,7 +48,11 @@ class Reactor(object):
 
     def _exec_rule(self, rule):
         try:
-            result =  rule.action(**dict((name, getattr(self, name)) for name in rule.attrs))
+            if (rule.predicate and
+                not rule.predicate(**dict((name, getattr(self, name)) for name in rule.predicate_args))
+            ):
+                return 
+            result = rule.action(**dict((name, getattr(self, name)) for name in rule.attrs))
         except AttributeError:
             result = None
         setattr(self, rule.name, result)
@@ -79,4 +88,11 @@ TypeError: unsupported operand type(s) for *: 'NoneType' and 'int'
 >>> R.f = 20
 >>> R.e
 10.0
+>>> R.g = Rule(lambda h: h.upper(), predicate= lambda h: isinstance(h, str))
+>>> R.h = 5
+>>> R.g is None
+True
+>>> R.h = "hello"
+>>> R.g
+'HELLO'
 """
