@@ -4,6 +4,11 @@ __version__ = "0.1"
 
 
 from collections import defaultdict
+from functools import partial
+
+from threading import Thread
+
+
 
 def _get_arg_names(func):
     return func.__code__.co_varnames[:func.__code__.co_argcount]
@@ -67,7 +72,25 @@ class Reactor(object):
             
 R = Reactor()
 
+class ThreadedReactor(Reactor):
     
+    def _exec_rule(self, rule):
+        try:
+            if (rule.predicate and
+                not self.encapsulate(rule.predicate, rule.predicate_args)):
+                return 
+            Thread(target=self._threaded_exec, args=[rule]).start()
+        except AttributeError:
+            setattr(self, rule.name, None)
+    
+    def _threaded_exec(self, rule):
+        try:
+            result = self.encapsulate(rule.action, rule.attrs)
+        except AttributeError:
+            result = None
+        setattr(self, rule.name, result) 
+
+TR = ThreadedReactor()
 
 __doc__= """
 >>> from react import R, Rule
