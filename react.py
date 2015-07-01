@@ -2,6 +2,7 @@
 __author__ = "João S. O. Bueno <gwidion@gmail.com>"
 __version__ = "0.1"
 
+
 from collections import defaultdict
 
 def _get_arg_names(func):
@@ -46,19 +47,27 @@ class Reactor(object):
             self._exec_rule(rule)
         self._recursing[attrname] -= 1
 
+    def encapsulate(self, func, attrs, run=True):
+        kwargs = dict((name, getattr(self, name)) for name in attrs)
+        if run:
+            return func(**kwargs)
+        return partial(func, **kwargs)
+        
     def _exec_rule(self, rule):
         try:
             if (rule.predicate and
-                not rule.predicate(**dict((name, getattr(self, name)) for name in rule.predicate_args))
-            ):
+                not self.encapsulate(rule.predicate, rule.predicate_args)):
                 return 
-            result = rule.action(**dict((name, getattr(self, name)) for name in rule.attrs))
+            result = self.encapsulate(rule.action, rule.attrs)
         except AttributeError:
             result = None
         setattr(self, rule.name, result)
             
+
             
 R = Reactor()
+
+    
 
 __doc__= """
 >>> from react import R, Rule
