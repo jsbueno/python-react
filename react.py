@@ -28,6 +28,8 @@ class Reactor(object):
         self._rules = defaultdict(list)
         self._max_recursion = 1
         self._recursing = defaultdict(lambda: 0)
+        self._tick = 0
+        self._changed_at = {}
         self._running = True
         
     def _rule_setter(self, rule):
@@ -42,8 +44,10 @@ class Reactor(object):
             self._rule_setter(value)
             self._exec_rule(value)
             return
-        if not self._running:
+        if not self._running or attrname in ("_tick", ):
             return super(Reactor, self).__setattr__(attrname, value)
+        self._tick += 1
+        self._changed_at[attrname] = self._tick
         if self._recursing[attrname] >= self._max_recursion:
             return
         self._recursing[attrname] += 1
