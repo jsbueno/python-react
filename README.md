@@ -34,10 +34,10 @@ For a fast start on quick hacks, there is an
 "R" reactor instance ready to use:
 
 For example:
-'''
+```Python
 
 >>> from react import R
->>> 
+>>>
 >>> R.greeting = lambda name, age: "Hello {}! How  nice you are {} years old!".format(name, age)
 >>> R.name = "João"
 >>> R.age = 40
@@ -46,7 +46,7 @@ For example:
 >>> R.age = 25
 >>> R.greeting
 'Hello João! How  nice you are 25 years old!'
-'''
+```
 
 A couple things to take note for now:
 1.  Although the simple rule examples are with
@@ -61,12 +61,12 @@ A couple things to take note for now:
     `_rules` data structure on the instance.  This is much like
     a spreadsheet where one does see the calculated values, but not
     the underlying formulas for each cell.
-   
+
  3.  The propagation on the current Reactor class is synchronous: when
     an attribute is set on the instance, all rules are checked
     and calculated before the execution flow comes back to the
     frame where the assignment statement took place.
-   
+
 Compatibility:
 ---------------
 The code so far has been tested with cPython 2.7, cPython 3.4
